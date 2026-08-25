@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sibling Snatchery</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#f4efe6;font-family:Arial,Helvetica,sans-serif}
+body{display:flex;align-items:center;justify-content:center;position:relative}
+.game{position:relative;width:500px;height:700px;flex:none;overflow:hidden;background:url('Bg_SS_Rakhi.jpg') center/cover no-repeat;touch-action:manipulation;transform-origin:center center;transform:scale(var(--game-scale,1));user-select:none;-webkit-user-select:none}
+.frame{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .38s ease,transform .38s ease;transform:scale(1.015)}
+.frame.active{opacity:1;pointer-events:auto;transform:scale(1)}
+.logo{position:absolute;top:40px;left:50%;transform:translateX(-50%);width:112px;z-index:20;filter:drop-shadow(0 4px 7px rgba(0,0,0,.06))}
+.f1 .unit{position:absolute;top:150px;left:50%;width:420px;transform:translateX(-50%);z-index:8;filter:drop-shadow(0 7px 7px rgba(99,32,17,.12));animation:unitFloat 2.3s ease-in-out infinite}
+.battle{position:absolute;left:0;right:0;top:300px;height:260px}
+.f1 .gift{position:absolute;width:154px;left:50%;top:46px;transform:translateX(-50%);z-index:7;filter:drop-shadow(0 13px 12px rgba(90,38,8,.18));animation:giftBob 1.4s ease-in-out infinite}
+.f1 .male,.f1 .female{position:absolute;z-index:12;filter:drop-shadow(0 10px 9px rgba(72,32,10,.12));will-change:transform;max-width:none}
+.f1 .male{left:-100px;top:34px;width:320px;animation:maleTap 3.1s ease-in-out infinite}
+.f1 .female{right:-82px;top:34px;width:290px;animation:femaleTap 3.1s ease-in-out infinite}
+.play{position:absolute;left:50%;bottom:42px;transform:translateX(-50%);width:178px;border:0;background:none;z-index:20;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.play img{width:100%;display:block;filter:drop-shadow(0 11px 12px rgba(70,34,0,.2));animation:playPulse 1.45s ease-in-out infinite}
+.play:active img{transform:scale(.94)}
+.f2 .tap-title,.f3 .tap-title,.f4 .tap-title{position:absolute;top:150px;left:50%;transform:translateX(-50%);width:352px;z-index:9;filter:drop-shadow(0 6px 7px rgba(80,25,10,.1));animation:titlePop 1.8s ease-in-out infinite}
+.snatch-zone,.remote-zone,.phone-zone{position:absolute;left:0;right:0;top:264px;height:305px;z-index:5}
+.f2 .open-hand,.f3 .open-hand,.f4 .open-hand{position:absolute;width:300px;max-width:none;z-index:10;cursor:pointer;transition:filter .15s ease,transform .15s ease;user-select:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent}
+.f2 .open-hand:hover,.f3 .open-hand:hover,.f4 .open-hand:hover{filter:drop-shadow(0 10px 11px rgba(85,35,10,.18)) brightness(1.03)}
+.f2 .male2,.f3 .male3,.f4 .male4{left:-92px;top:46px;width:300px}
+.f2 .female2,.f3 .female3,.f4 .female4{right:-92px;top:46px;width:300px}
+.f2 .choco{position:absolute;left:50%;top:10px;width:210px;transform:translateX(-50%) rotate(-6deg);z-index:6;filter:drop-shadow(0 13px 12px rgba(70,28,12,.18));animation:chocoFloat 1.6s ease-in-out infinite;pointer-events:none}
+.tap-hint{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);font-weight:800;font-size:13px;color:#7a321b;letter-spacing:.4px;opacity:.8;white-space:nowrap}
+.result-layer,.remote-result-layer{position:absolute;inset:0;z-index:30;pointer-events:none;display:none}
+.result-layer.show,.remote-result-layer.show{display:block}
+.result-img{position:absolute;will-change:transform,opacity;filter:drop-shadow(0 15px 14px rgba(52,20,6,.2))}
+.result-img.female-result{width:300px!important;right:-35px;top:294px;transform-origin:right center;animation:femaleSnatch .78s cubic-bezier(.2,.8,.25,1) forwards}
+.result-img.male-result{width:350px!important;left:-45px;top:294px;transform-origin:left center;animation:maleExactSnatch .78s cubic-bezier(.2,.8,.25,1) forwards}
+.male-fallback{position:absolute;left:-62px;top:315px;width:300px;animation:maleFallbackSnatch .78s cubic-bezier(.2,.8,.25,1) forwards;transform-origin:left center}
+.male-fallback .mf-hand{position:absolute;left:0;top:20px;width:300px;z-index:3}
+.male-fallback .mf-choco{position:absolute;left:150px;top:10px;width:112px;transform:rotate(72deg);z-index:2;filter:drop-shadow(0 8px 8px rgba(0,0,0,.16))}
+.flash{position:absolute;left:50%;top:390px;width:160px;height:160px;border-radius:50%;transform:translate(-50%,-50%) scale(.2);border:4px solid rgba(255,163,0,.5);opacity:0;z-index:20;pointer-events:none}
+.flash.go{animation:flash .5s ease-out}
+.f3 .remote{position:absolute;left:50%;top:0;width:245px;transform:translateX(-50%) rotate(-5deg);z-index:6;filter:drop-shadow(0 13px 12px rgba(70,28,12,.18));animation:remoteFloat 1.6s ease-in-out infinite;pointer-events:none}
+.remote-result-img{position:absolute;will-change:transform,opacity;filter:drop-shadow(0 15px 14px rgba(52,20,6,.2))}
+.remote-result-img.remote-male-result{width:350px;left:-45px;top:294px;transform-origin:left center;animation:remoteMaleSnatch .78s cubic-bezier(.2,.8,.25,1) forwards}
+.remote-result-img.remote-female-result{width:300px;right:-35px;top:294px;transform-origin:right center;animation:remoteFemaleSnatch .78s cubic-bezier(.2,.8,.25,1) forwards}
+.f4 .phone{position:absolute;left:50%;top:0;width:210px;transform:translateX(-50%) rotate(-5deg);z-index:6;filter:drop-shadow(0 13px 12px rgba(70,28,12,.18));animation:phoneFloat 1.6s ease-in-out infinite;pointer-events:none}
+.f4 .phone.slide-to-female{animation:phoneSlideToFemale .72s cubic-bezier(.22,.8,.28,1) forwards}
+.f4 .male4.rj-hand{width:300px;left:-92px;top:36px;z-index:10}
+.final-popup-overlay{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:0px;background:rgba(0,0,0,.85);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility .35s ease}
+.final-popup-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
+.final-popup-image{display:block;width:min(96%,480px);max-width:100%;max-height:92%;object-fit:contain;border-radius:22px;transform:scale(.86);opacity:0;filter:drop-shadow(0 18px 28px rgba(0,0,0,.38))}
+.final-popup-overlay.show .final-popup-image{animation:finalPopupIn .48s cubic-bezier(.18,.85,.28,1.15) forwards}
+@keyframes unitFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-.2deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(.2deg)}}
+@keyframes giftBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-1.5deg)}50%{transform:translateX(-50%) translateY(-6px) rotate(1.5deg)}}
+@keyframes maleTap{0%,8%,27%,100%{transform:translate(0,0) rotate(0)}15%{transform:translate(72px,-1px) rotate(1deg)}20%{transform:translate(64px,1px) rotate(.4deg)}}
+@keyframes femaleTap{0%,47%,67%,100%{transform:translate(0,0) rotate(0)}54%{transform:translate(-72px,0) rotate(-1deg)}59%{transform:translate(-64px,2px) rotate(-.4deg)}}
+@keyframes playPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes titlePop{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.025)}}
+@keyframes chocoFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-6deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(-3deg)}}
+@keyframes remoteFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-5deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(-2deg)}}
+@keyframes phoneFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-5deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(-2deg)}}
+@keyframes phoneSlideToFemale{0%{transform:translateX(-50%) translateY(0) rotate(-5deg)}100%{transform:translateX(calc(-50% + 52px)) translateY(10px) rotate(-9deg)}}
+@keyframes femaleSnatch{0%{transform:translateX(78px) scale(.96);opacity:.9}38%{transform:translateX(-12px) scale(1);opacity:1}100%{transform:translateX(92px) scale(.98);opacity:1}}
+@keyframes maleExactSnatch{0%{transform:translateX(-78px) scale(.96);opacity:.9}38%{transform:translateX(12px) scale(1);opacity:1}100%{transform:translateX(-92px) scale(.98);opacity:1}}
+@keyframes maleFallbackSnatch{0%{transform:translateX(0) scale(.9);opacity:.92}35%{transform:translateX(55px) scale(1);opacity:1}100%{transform:translateX(-125px) scale(.96);opacity:1}}
+@keyframes remoteMaleSnatch{0%{transform:translateX(-78px) scale(.96);opacity:.9}38%{transform:translateX(12px) scale(1);opacity:1}100%{transform:translateX(-92px) scale(.98);opacity:1}}
+@keyframes remoteFemaleSnatch{0%{transform:translateX(78px) scale(.96);opacity:.9}38%{transform:translateX(-12px) scale(1);opacity:1}100%{transform:translateX(92px) scale(.98);opacity:1}}
+@keyframes flash{0%{opacity:.8;transform:translate(-50%,-50%) scale(.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25)}}
+@keyframes finalPopupIn{0%{transform:scale(.86);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){
+*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="game" id="game">
+<section class="frame f1 active" id="frame1">
+<img class="logo" src="rapido_logo.png" alt="Rapido">
+<img class="unit" src="SS_unit_Rakhi.png" alt="Sibling Snatchery">
+<div class="battle">
+<img class="gift" src="gift_SS_Rakhi.png" alt="Gift">
+<img class="male" src="male_opn_hand_SS_Rakhi.png" alt="Male hand">
+<img class="female" src="female_opn_hand_SS_Rakhi.png" alt="Female hand">
+</div>
+<button class="play" id="playBtn" aria-label="Play">
+<img src="play_btn_SS_Rakhi.png" alt="Play">
+</button>
+</section>
+<section class="frame f2" id="frame2">
+<img class="logo" src="rapido_logo.png" alt="Rapido">
+<img class="tap-title" src="tap_to_snatch_SS_Rakhi.png" alt="Tap to Snatch">
+<div class="snatch-zone" id="snatchZone">
+<img class="choco" id="choco" src="choclate_SS_unit_Rakhi.png" alt="Chocolate">
+<img class="open-hand male2" id="maleHand" src="male_opn_hand_SS_Rakhi.png" alt="Tap male hand">
+<img class="open-hand female2" id="femaleHand" src="female_opn_hand_SS_Rakhi.png" alt="Tap female hand">
+</div>
+<div class="flash" id="flash"></div>
+<div class="result-layer" id="resultLayer"></div>
+</section>
+<section class="frame f3" id="frame3">
+<img class="logo" src="rapido_logo.png" alt="Rapido">
+<img class="tap-title" src="tap_to_snatch_SS_Rakhi.png" alt="Tap to Snatch">
+<div class="remote-zone">
+<img class="remote" id="remote3" src="remote_SS_Rakhi.png" alt="Remote">
+<img class="open-hand male3" id="maleHand3" src="male_opn_hand_SS_Rakhi.png" alt="Tap male hand">
+<img class="open-hand female3" id="femaleHand3" src="female_opn_hand_SS_Rakhi.png" alt="Tap female hand">
+</div>
+<div class="flash" id="flash3"></div>
+<div class="remote-result-layer" id="remoteResultLayer"></div>
+</section>
+<section class="frame f4" id="frame4">
+<img class="logo" src="rapido_logo.png" alt="Rapido">
+<img class="tap-title" src="tap_to_snatch_SS_Rakhi.png" alt="Tap to Snatch">
+<div class="phone-zone">
+<img class="phone" id="phone4" src="phone_SS_Rakhi.png" alt="Phone">
+<img class="open-hand male4" id="maleHand4" src="male_opn_hand_SS_Rakhi.png" alt="Tap male hand">
+<img class="open-hand female4" id="femaleHand4" src="female_opn_hand_SS_Rakhi.png" alt="Tap female hand">
+</div>
+<div class="flash" id="flash4"></div>
+</section>
+<div class="final-popup-overlay" id="finalPopup" aria-hidden="true">
+<img class="final-popup-image" src="popup_SS_Rakhi.png" alt="Happy Raksha Bandhan">
+</div>
+</main>
+<script>
+const game=document.getElementById('game');
+function resizeGame(){
+const scale=Math.min((window.innerWidth-2)/500,(window.innerHeight-2)/700,1);
+game.style.setProperty('--game-scale',scale);
+}
+resizeGame();
+window.addEventListener('resize',resizeGame);
+window.addEventListener('orientationchange',()=>setTimeout(resizeGame,100));
+const frame1=document.getElementById('frame1');
+const frame2=document.getElementById('frame2');
+const frame3=document.getElementById('frame3');
+const frame4=document.getElementById('frame4');
+const playBtn=document.getElementById('playBtn');
+const maleHand=document.getElementById('maleHand');
+const femaleHand=document.getElementById('femaleHand');
+const choco=document.getElementById('choco');
+const resultLayer=document.getElementById('resultLayer');
+const flash=document.getElementById('flash');
+const maleHand3=document.getElementById('maleHand3');
+const femaleHand3=document.getElementById('femaleHand3');
+const remote3=document.getElementById('remote3');
+const remoteResultLayer=document.getElementById('remoteResultLayer');
+const flash3=document.getElementById('flash3');
+const maleHand4=document.getElementById('maleHand4');
+const femaleHand4=document.getElementById('femaleHand4');
+const phone4=document.getElementById('phone4');
+const finalPopup=document.getElementById('finalPopup');
+let locked=false;
+let locked3=false;
+let frame3Timer=null;
+let frame4Timer=null;
+let frame4AutoStarted=false;
+let playStarted=false;
+function goToFrame3AfterDelay(){
+if(frame3Timer)return;
+frame3Timer=setTimeout(()=>{
+frame2.classList.remove('active');
+setTimeout(()=>frame3.classList.add('active'),120);
+},500);
+}
+function goToFrame4AfterDelay(){
+if(frame4Timer)return;
+frame4Timer=setTimeout(()=>{
+frame3.classList.remove('active');
+setTimeout(()=>{
+frame4.classList.add('active');
+startFrame4AutoAnimation();
+},120);
+},500);
+}
+function startGame(){
+if(playStarted)return;
+playStarted=true;
+playClickSound();
+frame1.classList.remove('active');
+setTimeout(()=>frame2.classList.add('active'),120);
+}
+playBtn.addEventListener('click',startGame);
+function burst(target){
+target.classList.remove('go');
+void target.offsetWidth;
+target.classList.add('go');
+}
+function hideBase(){
+maleHand.style.visibility='hidden';
+femaleHand.style.visibility='hidden';
+choco.style.visibility='hidden';
+}
+function maleSnatch(){
+if(locked)return;
+locked=true;
+playClickSound();
+burst(flash);
+hideBase();
+resultLayer.classList.add('show');
+goToFrame3AfterDelay();
+const img=new Image();
+img.className='result-img male-result';
+img.alt='Male snatched the chocolate';
+img.onload=()=>{
+resultLayer.innerHTML='';
+resultLayer.appendChild(img);
+};
+img.onerror=()=>{
+resultLayer.innerHTML='<div class="male-fallback"><img class="mf-choco" src="choclate_SS_unit_Rakhi.png" alt=""><img class="mf-hand" src="male_opn_hand_SS_Rakhi.png" alt=""></div>';
+};
+img.src='choclate_male_close_hand_SS_unit_Rakhi.png';
+}
+function femaleSnatch(){
+if(locked)return;
+locked=true;
+playClickSound();
+burst(flash);
+hideBase();
+resultLayer.classList.add('show');
+goToFrame3AfterDelay();
+resultLayer.innerHTML='<img class="result-img female-result" src="choclate_female_close_hand_SS_unit_Rakhi.png" alt="Female snatched the chocolate">';
+}
+maleHand.addEventListener('click',maleSnatch);
+femaleHand.addEventListener('click',femaleSnatch);
+maleHand.addEventListener('touchend',e=>{
+e.preventDefault();
+maleSnatch();
+},{passive:false});
+femaleHand.addEventListener('touchend',e=>{
+e.preventDefault();
+femaleSnatch();
+},{passive:false});
+function hideRemoteBase(){
+maleHand3.style.visibility='hidden';
+femaleHand3.style.visibility='hidden';
+remote3.style.visibility='hidden';
+}
+function maleRemoteSnatch(){
+if(locked3)return;
+locked3=true;
+playClickSound();
+burst(flash3);
+hideRemoteBase();
+remoteResultLayer.classList.add('show');
+remoteResultLayer.innerHTML='<img class="remote-result-img remote-male-result" src="remote_male_close_hand_SS_unit_Rakhi.png" alt="Male snatched the remote">';
+goToFrame4AfterDelay();
+}
+function femaleRemoteSnatch(){
+if(locked3)return;
+locked3=true;
+playClickSound();
+burst(flash3);
+hideRemoteBase();
+remoteResultLayer.classList.add('show');
+remoteResultLayer.innerHTML='<img class="remote-result-img remote-female-result" src="remote_female_close_hand_SS_unit_Rakhi.png" alt="Female snatched the remote">';
+goToFrame4AfterDelay();
+}
+maleHand3.addEventListener('click',maleRemoteSnatch);
+femaleHand3.addEventListener('click',femaleRemoteSnatch);
+maleHand3.addEventListener('touchend',e=>{
+e.preventDefault();
+maleRemoteSnatch();
+},{passive:false});
+femaleHand3.addEventListener('touchend',e=>{
+e.preventDefault();
+femaleRemoteSnatch();
+},{passive:false});
+function startFrame4AutoAnimation(){
+if(frame4AutoStarted)return;
+frame4AutoStarted=true;
+setTimeout(()=>{
+maleHand4.src='male_rj_hand_SS_unit_Rakhi.png';
+maleHand4.classList.add('rj-hand');
+playClickSound();
+phone4.classList.add('slide-to-female');
+setTimeout(()=>{
+finalPopup.classList.add('show');
+finalPopup.setAttribute('aria-hidden','false');
+},1000);
+},1200);
+}
+const clickSound=new Audio('click.mp3');
+clickSound.preload='auto';
+clickSound.volume=1;
+function playClickSound(){
+try{
+clickSound.pause();
+clickSound.currentTime=0;
+const p=clickSound.play();
+if(p&&typeof p.catch==='function')p.catch(()=>{});
+}catch(e){}
+}
+</script>
+</body>
+</html>
